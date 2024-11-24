@@ -22,6 +22,12 @@ def getToken():
 ELEVEN_API_KEY = getToken()
 
 
+async def list_models(client: AsyncElevenLabs) -> List[Dict]:
+    response = await client.models.get_all()
+    pprint(response)
+    return
+
+
 async def list_voices(client: AsyncElevenLabs) -> List[Dict]:
     response = await client.voices.get_all()
     return response.voices
@@ -36,14 +42,25 @@ async def get_voice(client: AsyncElevenLabs, voice_name: str) -> Optional[str]:
 
 
 async def create_voice(client: AsyncElevenLabs, voice_name: str) -> str:
-    # First record the training audio
-    if not os.path.exists("train_audio.wav"):
-        record_audio("train_audio.wav", duration=30)
+    files: List[str] = []
+    i: int = 0
+    if os.path.isdir(voice_name):
+        for file in os.listdir(voice_name):
+            i += 1
+            if i > 25:
+                break
+            files.append(os.path.join(voice_name, file))
+    else:
+        files.append("coast_guard.wav")
+        if not os.path.exists("coast_guard.wav"):
+            # Record the training audio if it doesn't exist
+            record_audio("coast_guard.wav", duration=30)
 
     res = await client.clone(
         name=voice_name,
         description="",
-        files=["train_audio.wav"],
+        files=files,
+        labels=(),
     )
 
     pprint(res)
@@ -64,9 +81,9 @@ async def execute_voice(client: AsyncElevenLabs, voice_name: str, text: str) -> 
     audio_generator = await client.generate(
         text=text, voice=voice_id, model="eleven_multilingual_v2", stream=False
     )
-    
+
     # Convert generator to bytes
-    audio_bytes = b''
+    audio_bytes = b""
     async for chunk in audio_generator:
         audio_bytes += chunk
 
@@ -79,4 +96,11 @@ async def execute_voice(client: AsyncElevenLabs, voice_name: str, text: str) -> 
 # Run the async function
 if __name__ == "__main__":
     client = AsyncElevenLabs(api_key=ELEVEN_API_KEY)
-    asyncio.run(execute_voice(client, "my-new-voice-3", "Hello, how are you?"))
+    # asyncio.run(list_models(client))
+    asyncio.run(
+        execute_voice(
+            client,
+            "voice-analog",
+            "Hello, how are you?",
+        )
+    )
