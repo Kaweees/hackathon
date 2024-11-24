@@ -96,7 +96,7 @@ async def execute_voice(client: AsyncElevenLabs, voice_name: str, text: str) -> 
 
 # Run the async function
 if __name__ == "__main__":
-    client = create_client()
+    client = asyncio.run(create_client())
     # asyncio.run(list_models(client))
     asyncio.run(
         execute_voice(
