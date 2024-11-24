@@ -11,6 +11,7 @@ python-dotenv = "^1.0.1"
 requests = "^2.32.3"
 pyaudio = "^0.2.14"
 ipython = "^8.29.0"
+elevenlabs = "^1.13.0"
 
 
 [build-system]

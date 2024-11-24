@@ -11,7 +11,10 @@ load_dotenv()
 
 
 def getToken():
-    return os.environ.get("LMNT_API_KEY")
+    token = os.environ.get("LMNT_API_KEY")
+    if token is None:
+        raise ValueError("LMNT_API_KEY not found in environment variables")
+    return token
 
 
 LMNT_API_KEY = getToken()
@@ -35,7 +38,8 @@ async def get_voice(voice_name: str) -> Optional[str]:
 
 async def create_voice(voice_name: str) -> str:
     # First record the training audio
-    record_audio("train_audio.wav", duration=30)
+    if not os.path.exists("train_audio.wav"):
+        record_audio("train_audio.wav", duration=30)
 
     async with Speech(LMNT_API_KEY) as speech:
         res = await speech.create_voice(
@@ -54,22 +58,19 @@ async def execute_voice(voice_name: str, text: str) -> Dict:
         print("Voice not found. Creating new voice...")
         try:
             voice_id = await create_voice(voice_name)
-            # Wait a few seconds for the voice to be ready
-            await asyncio.sleep(5)
         except Exception as e:
             print(f"Error creating voice: {e}")
-            # Fallback to a default system voice
-            voice_id = "nathan"
-    
+            return None
+
     async with Speech(LMNT_API_KEY) as speech:
         res = await speech.synthesize(text, voice_id, format="wav")
-        
+
         audio_bytes = res["audio"]
-        
+
         # Save the audio file
         with open("output.wav", "wb") as f:
             f.write(audio_bytes)
-        
+
         return Audio(audio_bytes)
 
 
