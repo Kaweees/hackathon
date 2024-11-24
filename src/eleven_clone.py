@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+import sys
 from pprint import pprint
 import asyncio
 from elevenlabs import play
@@ -97,10 +98,11 @@ async def execute_voice(client: AsyncElevenLabs, voice_name: str, text: str) -> 
 if __name__ == "__main__":
     client = AsyncElevenLabs(api_key=ELEVEN_API_KEY)
     # asyncio.run(list_models(client))
+    input_prompt = sys.stdin.read()
     asyncio.run(
         execute_voice(
             client,
             "voice-analog",
-            "Hello, how are you?",
+            input_prompt,
         )
     )
