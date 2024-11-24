@@ -33,34 +33,47 @@ async def get_voice(voice_name: str) -> Optional[str]:
         return None
 
 
-async def create_voice(voice_name: str) -> Dict:
+async def create_voice(voice_name: str) -> str:
+    # First record the training audio
+    record_audio("train_audio.wav", duration=30)
+
     async with Speech(LMNT_API_KEY) as speech:
         res = await speech.create_voice(
             voice_name,
-            enhance=False,
+            enhance=True,
             filenames=["train_audio.wav"],
             type="professional",
         )
         pprint(res)
-        return res
+        return res["id"]
 
 
 async def execute_voice(voice_name: str, text: str) -> Dict:
     voice_id = await get_voice(voice_name)
     if voice_id is None:
-        # record_audio("train_audio.wav", duration=30)
-        voice_id = await create_voice(voice_name)
-
+        print("Voice not found. Creating new voice...")
+        try:
+            voice_id = await create_voice(voice_name)
+            # Wait a few seconds for the voice to be ready
+            await asyncio.sleep(5)
+        except Exception as e:
+            print(f"Error creating voice: {e}")
+            # Fallback to a default system voice
+            voice_id = "nathan"
+    
     async with Speech(LMNT_API_KEY) as speech:
         res = await speech.synthesize(text, voice_id, format="wav")
-
+        
         audio_bytes = res["audio"]
-
-        Audio(audio_bytes)
-        return res
+        
+        # Save the audio file
+        with open("output.wav", "wb") as f:
+            f.write(audio_bytes)
+        
+        return Audio(audio_bytes)
 
 
 # Run the async function
 if __name__ == "__main__":
     voices = asyncio.run(list_voices())
-    asyncio.run(execute_voice("my-new-voice-1", "Hello, how are you?"))
+    asyncio.run(execute_voice("my-new-voice-3", "Hello, how are you?"))
