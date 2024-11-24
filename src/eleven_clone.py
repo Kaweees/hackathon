@@ -19,7 +19,8 @@ def getToken():
     return token
 
 
-ELEVEN_API_KEY = getToken()
+async def create_client() -> AsyncElevenLabs:
+    return AsyncElevenLabs(api_key=getToken())
 
 
 async def list_models(client: AsyncElevenLabs) -> List[Dict]:
@@ -95,12 +96,12 @@ async def execute_voice(client: AsyncElevenLabs, voice_name: str, text: str) -> 
 
 # Run the async function
 if __name__ == "__main__":
-    client = AsyncElevenLabs(api_key=ELEVEN_API_KEY)
+    client = create_client()
     # asyncio.run(list_models(client))
     asyncio.run(
         execute_voice(
             client,
-            "voice-analog",
+            "coast-guard",
             "Hello, how are you?",
         )
     )
